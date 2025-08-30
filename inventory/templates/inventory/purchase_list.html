@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Purchases{% endblock %}
+{% block content %}
+<h2>Purchase History</h2>
+
+<table>
+  <tr>
+    <th>#</th>
+    <th>Product</th>
+    <th>SKU</th>
+    <th>Quantity</th>
+    <th>Price</th>
+    <th>Date</th>
+  </tr>
+  {% for p in purchases %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ p.product.name }}</td>
+    <td>{{ p.product.sku }}</td>
+    <td>{{ p.quantity }}</td>
+    <td>{{ p.price }}</td>
+    <td>{{ p.created_at|date:"Y-m-d H:i" }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="6">No purchase records yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
