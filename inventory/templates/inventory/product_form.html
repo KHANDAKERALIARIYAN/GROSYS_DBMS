@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Product Form{% endblock %}
+{% block content %}
+<h2>{% if product %}Edit{% else %}New{% endif %} Product</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+  <a class="button" href="{% url 'inventory:product_list' %}">Cancel</a>
+</form>
+{% endblock %}

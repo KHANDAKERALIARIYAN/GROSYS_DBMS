@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Sale{% endblock %}
+{% block content %}
+<h2>Stock Out</h2>
+<p>Reducing stock for <strong>{{ product.name }}</strong> ({{ product.sku }})</p>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Reduce Stock</button>
+  <a class="button" href="{% url 'inventory:product_list' %}">Cancel</a>
+</form>
+{% endblock %}
