@@ -81,18 +81,35 @@ def product_delete(request, pk):
 
 @transaction.atomic
 def purchase(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    if request.method == 'POST':
-        form = MovementForm(request.POST)
-        if form.is_valid():
-            product.quantity = (product.quantity or 0) + form.cleaned_data['amount']
-            product.save()
-            Purchase.objects.create(product=product, quantity=form.cleaned_data['amount'], price=product.price)
-            messages.success(request, 'Stock increased.')
-            return redirect('inventory:product_list')
+    if pk == 0:
+        products = Product.objects.all()
+        selected_product = None
+        if request.method == 'POST':
+            prod_id = request.POST.get('product')
+            selected_product = get_object_or_404(Product, pk=prod_id)
+            form = MovementForm(request.POST)
+            if form.is_valid():
+                selected_product.quantity = (selected_product.quantity or 0) + form.cleaned_data['amount']
+                selected_product.save()
+                Purchase.objects.create(product=selected_product, quantity=form.cleaned_data['amount'], price=selected_product.price)
+                messages.success(request, 'Stock increased.')
+                return redirect('inventory:purchase_list')
+        else:
+            form = MovementForm()
+        return render(request, 'inventory/purchase_form.html', {'form': form, 'products': products, 'product': selected_product})
     else:
-        form = MovementForm()
-    return render(request, 'inventory/purchase_form.html', {'form': form, 'product': product})
+        product = get_object_or_404(Product, pk=pk)
+        if request.method == 'POST':
+            form = MovementForm(request.POST)
+            if form.is_valid():
+                product.quantity = (product.quantity or 0) + form.cleaned_data['amount']
+                product.save()
+                Purchase.objects.create(product=product, quantity=form.cleaned_data['amount'], price=product.price)
+                messages.success(request, 'Stock increased.')
+                return redirect('inventory:purchase_list')
+        else:
+            form = MovementForm()
+        return render(request, 'inventory/purchase_form.html', {'form': form, 'product': product})
 
 
 @transaction.atomic

@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Purchases{% endblock %}
 {% block content %}
-<h2>Purchase History</h2>
+<div style="display: flex; align-items: center; justify-content: space-between;">
+  <h2>Purchase History</h2>
+  <a href="{% url 'inventory:purchase' 0 %}" class="btn btn-primary" style="margin-left: auto;">Purchase</a>
+</div>
 
 <table>
   <tr>
