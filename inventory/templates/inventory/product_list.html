@@ -9,18 +9,19 @@
 </form>
 
 <table>
-  <tr><th>#</th><th>Name</th><th>SKU</th><th>Qty</th><th>Price</th><th>Actions</th></tr>
+  <tr><th>No.</th><th>Name</th><th>SKU</th><th>Category</th><th>Supplier</th><th>Qty</th><th>Price</th><th>Actions</th></tr>
   {% for p in products %}
   <tr>
     <td>{{ forloop.counter }}</td>
     <td>{{ p.name }}</td>
     <td>{{ p.sku }}</td>
+    <td>{{ p.category }}</td>
+    <td>{{ p.supplier }}</td>
     <td>{{ p.quantity }}</td>
     <td>{{ p.price }}</td>
     <td>
-      <a href="{% url 'inventory:product_update' p.pk %}">Edit</a> |
-      <a href="{% url 'inventory:purchase' p.pk %}">Purchase</a> |
-      <a href="{% url 'inventory:sale' p.pk %}">Sale</a> |
+  <a href="{% url 'inventory:product_update' p.pk %}">Edit</a> |
+    <a href="{% url 'inventory:product_detail' p.pk %}">View</a> |
       <form action="{% url 'inventory:product_delete' p.pk %}" method="post" style="display:inline">
         {% csrf_token %}
         <button onclick="return confirm('Delete?')">Delete</button>

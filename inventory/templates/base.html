@@ -4,16 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Inventory{% endblock %}</title>
+  <title>{% block title %}GROSYS{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
 <header class="topbar">
   <div class="container">
-    <h1><a href="{% url 'inventory:dashboard' %}">Inventory</a></h1>
+  <h1><a href="{% url 'inventory:dashboard' %}">GROSYS</a></h1>
     <nav>
       <a href="{% url 'inventory:product_list' %}">Products</a>
-      <a href="{% url 'inventory:product_create' %}">Add Product</a>
       <a href="{% url 'inventory:purchase_list' %}">Purchases</a>
 <a href="{% url 'inventory:sale_list' %}">Sales</a>
 
@@ -33,7 +32,7 @@
 </main>
 
 <footer class="footer">
-  <div class="container">© {{ now|date:'Y' }} Inventory</div>
+  <div class="container">© {{ now|date:'Y' }} GROSYS</div>
 </footer>
 </body>
 </html>

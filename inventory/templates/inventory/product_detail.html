@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Product Details</h2>
+    <table class="table table-bordered table-dark">
+        <tr><th>Name</th><td>{{ product.name }}</td></tr>
+        <tr><th>SKU</th><td>{{ product.sku }}</td></tr>
+        <tr><th>Category</th><td>{{ product.category }}</td></tr>
+        <tr><th>Supplier</th><td>{{ product.supplier }}</td></tr>
+        <tr><th>Quantity</th><td>{{ product.quantity }}</td></tr>
+        <tr><th>Price</th><td>{{ product.price }}</td></tr>
+    </table>
+    <a href="{% url 'inventory:product_list' %}" class="btn btn-secondary">Back to Products</a>
+</div>
+{% endblock %}

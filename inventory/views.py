@@ -19,6 +19,9 @@ class MovementForm(forms.Form):
 
 
 # ---------------------- Views ----------------------
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    return render(request, 'inventory/product_detail.html', {'product': product})
 def dashboard(request):
     total_products = Product.objects.count()
     total_units = Product.objects.aggregate(total=Sum('quantity'))['total'] or 0
