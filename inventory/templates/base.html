@@ -12,9 +12,12 @@
   <div class="container">
   <h1><a href="{% url 'inventory:dashboard' %}">GROSYS</a></h1>
     <nav>
-      <a href="{% url 'inventory:product_list' %}">Products</a>
-      <a href="{% url 'inventory:purchase_list' %}">Purchases</a>
-<a href="{% url 'inventory:sale_list' %}">Sales</a>
+
+  <a href="{% url 'inventory:product_list' %}">Products</a>
+  <a href="{% url 'inventory:purchase_list' %}">Purchases</a>
+  <a href="{% url 'inventory:sale_list' %}">Sales</a>
+  <a href="{% url 'inventory:supplier_list' %}">Supplier</a>
+  <a href="{% url 'inventory:category_list' %}">Category</a>
 
     </nav>
   </div>

@@ -1,9 +1,61 @@
+def supplier_detail(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    return render(request, 'inventory/supplier_detail.html', {'supplier': supplier})
+
+def supplier_update(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        supplier.name = request.POST.get('name')
+        supplier.contact_person = request.POST.get('contact_person')
+        supplier.phone = request.POST.get('phone')
+        supplier.email = request.POST.get('email')
+        supplier.address = request.POST.get('address')
+        supplier.save()
+        return redirect('inventory:supplier_list')
+    return render(request, 'inventory/supplier_update.html', {'supplier': supplier})
+
+def supplier_delete(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        supplier.delete()
+        return redirect('inventory:supplier_list')
+    return render(request, 'inventory/supplier_delete_confirm.html', {'supplier': supplier})
+from django.shortcuts import get_object_or_404
+def category_detail(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    return render(request, 'inventory/category_detail.html', {'category': category})
+
+def category_update(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.name = request.POST.get('name')
+        category.description = request.POST.get('description')
+        category.save()
+        return redirect('inventory:category_list')
+    return render(request, 'inventory/category_update.html', {'category': category})
+
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('inventory:category_list')
+    return render(request, 'inventory/category_delete_confirm.html', {'category': category})
+from .models import Category
+from django.shortcuts import redirect
+def category_add(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        if name:
+            Category.objects.create(name=name, description=description)
+            return redirect('inventory:category_list')
+    return render(request, 'inventory/category_form.html')
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django import forms
 from django.db import transaction
 from django.db.models import Q, Sum, F
-from .models import Product, Purchase, Sale
+from .models import Product, Purchase, Sale, Supplier, Category
 
 
 # ---------------------- Forms ----------------------
@@ -13,11 +65,33 @@ class ProductForm(forms.ModelForm):
         fields = ['name', 'sku', 'category', 'supplier', 'quantity', 'price']
 
 
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_person', 'phone', 'email', 'address']
+def supplier_create(request):
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory:supplier_list')
+    else:
+        form = SupplierForm()
+    return render(request, 'inventory/supplier_form.html', {'form': form})
+
+
 class MovementForm(forms.Form):
     amount = forms.IntegerField(min_value=1, label='Quantity')
     note = forms.CharField(required=False)
 
 
+def supplier_list(request):
+    suppliers = Supplier.objects.all().order_by('name')
+    return render(request, 'inventory/supplier_list.html', {'suppliers': suppliers})
+
+def category_list(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'inventory/category_list.html', {'categories': categories})
 # ---------------------- Views ----------------------
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)

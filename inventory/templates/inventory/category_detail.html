@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Category Detail</h2>
+<p><strong>Name:</strong> {{ category.name }}</p>
+<p><strong>Description:</strong> {{ category.description }}</p>
+<a href="{% url 'inventory:category_list' %}">Back to List</a>
+{% endblock %}
