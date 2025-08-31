@@ -114,22 +114,43 @@ def purchase(request, pk):
 
 @transaction.atomic
 def sale(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    if request.method == 'POST':
-        form = MovementForm(request.POST)
-        if form.is_valid():
-            amount = form.cleaned_data['amount']
-            if amount > (product.quantity or 0):
-                form.add_error('amount', 'Insufficient stock')
-            else:
-                product.quantity = product.quantity - amount
-                product.save()
-                Sale.objects.create(product=product, quantity=amount, price=product.price)
-                messages.success(request, 'Stock reduced.')
-                return redirect('inventory:product_list')
+    if pk == 0:
+        products = Product.objects.all()
+        selected_product = None
+        if request.method == 'POST':
+            prod_id = request.POST.get('product')
+            selected_product = get_object_or_404(Product, pk=prod_id)
+            form = MovementForm(request.POST)
+            if form.is_valid():
+                amount = form.cleaned_data['amount']
+                if amount > (selected_product.quantity or 0):
+                    form.add_error('amount', 'Insufficient stock')
+                else:
+                    selected_product.quantity = selected_product.quantity - amount
+                    selected_product.save()
+                    Sale.objects.create(product=selected_product, quantity=amount, price=selected_product.price)
+                    messages.success(request, 'Stock reduced.')
+                    return redirect('inventory:sale_list')
+        else:
+            form = MovementForm()
+        return render(request, 'inventory/sale_form.html', {'form': form, 'products': products, 'product': selected_product})
     else:
-        form = MovementForm()
-    return render(request, 'inventory/sale_form.html', {'form': form, 'product': product})
+        product = get_object_or_404(Product, pk=pk)
+        if request.method == 'POST':
+            form = MovementForm(request.POST)
+            if form.is_valid():
+                amount = form.cleaned_data['amount']
+                if amount > (product.quantity or 0):
+                    form.add_error('amount', 'Insufficient stock')
+                else:
+                    product.quantity = product.quantity - amount
+                    product.save()
+                    Sale.objects.create(product=product, quantity=amount, price=product.price)
+                    messages.success(request, 'Stock reduced.')
+                    return redirect('inventory:sale_list')
+        else:
+            form = MovementForm()
+        return render(request, 'inventory/sale_form.html', {'form': form, 'product': product})
 
 
 def purchase_list(request):
