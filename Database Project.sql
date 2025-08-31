@@ -337,4 +337,235 @@ ORDER BY SALE_DATE;
 
 
 
+-- PL/SQL PROCEDURES
+
+
+--1
+CREATE OR REPLACE PROCEDURE add_category (
+    p_id          IN NUMBER,
+    p_name        IN NVARCHAR2,
+    p_description IN NCLOB
+) AS
+BEGIN
+    INSERT INTO INVENTORY_CATEGORY (ID, NAME, DESCRIPTION)
+    VALUES (p_id, p_name, p_description);
+
+    DBMS_OUTPUT.PUT_LINE('Category added successfully: ' || p_name);
+END;
+/
+SET SERVEROUTPUT ON;
+EXEC add_category(1, 'Toys', 'Toys for babies');
+
+
+
+--2
+CREATE OR REPLACE PROCEDURE add_supplier (
+    p_id            IN NUMBER,
+    p_name          IN NVARCHAR2,
+    p_contact       IN NVARCHAR2,
+    p_phone         IN NVARCHAR2,
+    p_email         IN NVARCHAR2,
+    p_address       IN NCLOB
+) AS
+BEGIN
+    INSERT INTO INVENTORY_SUPPLIER (ID, NAME, CONTACT_PERSON, PHONE, EMAIL, ADDRESS)
+    VALUES (p_id, p_name, p_contact, p_phone, p_email, p_address);
+
+    DBMS_OUTPUT.PUT_LINE('Supplier added successfully: ' || p_name);
+END;
+/
+EXEC add_supplier(1, 'ABC Electronics', 'John Doe', '1234567890', 'abc@shop.com', 'Dhaka, Bangladesh');
+
+
+
+--3
+CREATE OR REPLACE PROCEDURE add_product (
+    p_id         IN NUMBER,
+    p_name       IN NVARCHAR2,
+    p_sku        IN NVARCHAR2,
+    p_quantity   IN NUMBER,
+    p_price      IN NUMBER,
+    p_category   IN NUMBER,
+    p_supplier   IN NUMBER
+) AS
+BEGIN
+    INSERT INTO INVENTORY_PRODUCT (ID, NAME, SKU, QUANTITY, PRICE, CATEGORY_ID, SUPPLIER_ID)
+    VALUES (p_id, p_name, p_sku, p_quantity, p_price, p_category, p_supplier);
+
+    DBMS_OUTPUT.PUT_LINE('Product added successfully: ' || p_name);
+END;
+/
+EXEC add_product(1, 'Laptop', 'SKU-101', 10, 800.00, 1, 1);
+
+
+
+-- 4
+CREATE OR REPLACE PROCEDURE record_purchase (
+    p_id        IN NUMBER,
+    p_quantity  IN NUMBER,
+    p_price     IN NUMBER,
+    p_product   IN NUMBER
+) AS
+BEGIN
+    INSERT INTO INVENTORY_PURCHASE (ID, QUANTITY, PRICE, CREATED_AT, PRODUCT_ID)
+    VALUES (p_id, p_quantity, p_price, SYSTIMESTAMP, p_product);
+
+    UPDATE INVENTORY_PRODUCT
+    SET QUANTITY = QUANTITY + p_quantity
+    WHERE ID = p_product;
+
+    DBMS_OUTPUT.PUT_LINE('Purchase recorded. Stock increased by ' || p_quantity);
+END;
+/
+EXEC record_purchase(1, 5, 750.00, 1);  -- stock increases to 15
+
+
+
+-- 5
+CREATE OR REPLACE PROCEDURE record_sale (
+    p_id        IN NUMBER,
+    p_quantity  IN NUMBER,
+    p_price     IN NUMBER,
+    p_product   IN NUMBER
+) AS
+    v_current_stock NUMBER;
+BEGIN
+    SELECT QUANTITY INTO v_current_stock
+    FROM INVENTORY_PRODUCT
+    WHERE ID = p_product;
+
+    IF v_current_stock < p_quantity THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Not enough stock for this sale!');
+    ELSE
+        INSERT INTO INVENTORY_SALE (ID, QUANTITY, PRICE, CREATED_AT, PRODUCT_ID)
+        VALUES (p_id, p_quantity, p_price, SYSTIMESTAMP, p_product);
+
+        UPDATE INVENTORY_PRODUCT
+        SET QUANTITY = QUANTITY - p_quantity
+        WHERE ID = p_product;
+
+        DBMS_OUTPUT.PUT_LINE('Sale recorded. Stock decreased by ' || p_quantity);
+    END IF;
+END;
+/
+EXEC record_sale(1, 3, 850.00, 1);  -- stock decreases to 12
+
+
+
+
+
+
+
+-- Functions 
+
+
+-- Get Current Stock of a Product with their primary key id
+CREATE OR REPLACE FUNCTION get_stock (
+    p_product_id IN NUMBER
+) RETURN NUMBER IS
+    v_stock NUMBER;
+BEGIN
+    SELECT QUANTITY INTO v_stock
+    FROM INVENTORY_PRODUCT
+    WHERE ID = p_product_id;
+
+    RETURN v_stock;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN -1;  -- product not found
+END;
+/
+
+SELECT get_stock(28) AS stock FROM dual;
+
+
+
+
+-- Get Total Purchases for a Product
+
+CREATE OR REPLACE FUNCTION get_total_purchases (
+    p_product_id IN NUMBER
+) RETURN NUMBER IS
+    v_total NUMBER;
+BEGIN
+    SELECT NVL(SUM(QUANTITY), 0)
+    INTO v_total
+    FROM INVENTORY_PURCHASE
+    WHERE PRODUCT_ID = p_product_id;
+
+    RETURN v_total;
+END;
+/
+
+SELECT get_total_purchases(1) AS total_purchased FROM dual;
+
+
+
+-- Get Total Sales for a Product
+
+CREATE OR REPLACE FUNCTION get_total_sales (
+    p_product_id IN NUMBER
+) RETURN NUMBER IS
+    v_total NUMBER;
+BEGIN
+    SELECT NVL(SUM(QUANTITY), 0)
+    INTO v_total
+    FROM INVENTORY_SALE
+    WHERE PRODUCT_ID = p_product_id;
+
+    RETURN v_total;
+END;
+/
+
+SELECT get_total_sales(1) AS total_sold FROM dual;
+
+
+
+
+-- Get Product Value in Stock (Quantity × Price) 
+
+CREATE OR REPLACE FUNCTION get_product_value (
+    p_product_id IN NUMBER
+) RETURN NUMBER IS
+    v_value NUMBER;
+BEGIN
+    SELECT QUANTITY * PRICE
+    INTO v_value
+    FROM INVENTORY_PRODUCT
+    WHERE ID = p_product_id;
+
+    RETURN v_value;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+END;
+/
+
+SELECT get_product_value(1) AS stock_value FROM dual;
+
+
+
+-- Get Supplier Name for a Product
+
+CREATE OR REPLACE FUNCTION get_supplier_name (
+    p_product_id IN NUMBER
+) RETURN NVARCHAR2 IS
+    v_supplier NVARCHAR2(150);
+BEGIN
+    SELECT S.NAME
+    INTO v_supplier
+    FROM INVENTORY_PRODUCT P
+    JOIN INVENTORY_SUPPLIER S ON P.SUPPLIER_ID = S.ID
+    WHERE P.ID = p_product_id;
+
+    RETURN v_supplier;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'No Supplier';
+END;
+/
+
+SELECT get_supplier_name(1) AS supplier FROM dual;
+
+
 
