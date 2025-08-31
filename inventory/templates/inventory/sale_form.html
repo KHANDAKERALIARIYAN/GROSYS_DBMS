@@ -1,13 +1,48 @@
 {% extends 'base.html' %}
 {% block title %}Sale{% endblock %}
 {% block content %}
-<h2>Stock Out</h2>
-<p>Reducing stock for <strong>{{ product.name }}</strong> ({{ product.sku }})</p>
-
-<form method="post" class="form">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Reduce Stock</button>
-  <a class="button" href="{% url 'inventory:product_list' %}">Cancel</a>
-</form>
+<h2>Sales</h2>
+{% if products %}
+  <form method="post" class="form">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="product">Product</label>
+      <select name="product" id="product" required>
+        <option value="">Select Product</option>
+        {% for prod in products %}
+          <option value="{{ prod.pk }}">{{ prod.name }} ({{ prod.sku }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% for field in form %}
+      {% if field.name != 'note' %}
+        <div class="form-group">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<div class="error">{{ error }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+    <button type="submit">Add Sale</button>
+    <a class="button" href="{% url 'inventory:sale_list' %}">Cancel</a>
+  </form>
+{% else %}
+  <p>Reducing stock for <strong>{{ product.name }}</strong> ({{ product.sku }})</p>
+  <form method="post" class="form">
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.name != 'note' %}
+        <div class="form-group">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<div class="error">{{ error }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+    <button type="submit">Reduce Stock</button>
+    <a class="button" href="{% url 'inventory:sale_list' %}">Cancel</a>
+  </form>
+{% endif %}
 {% endblock %}

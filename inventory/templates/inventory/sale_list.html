@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}Sales{% endblock %}
 {% block content %}
-<h2>Sales History</h2>
+<div style="display: flex; align-items: center; justify-content: space-between;">
+  <h2>Sales History</h2>
+  <a href="{% url 'inventory:sale' 0 %}" class="btn btn-primary" style="margin-left: auto;">Sales</a>
+</div>
 
 <table>
   <tr>
-    <th>#</th>
+    <th>No.</th>
     <th>Product</th>
     <th>SKU</th>
     <th>Quantity</th>
