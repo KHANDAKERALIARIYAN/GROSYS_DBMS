@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Supplier Detail</h2>
+<p><strong>Name:</strong> {{ supplier.name }}</p>
+<p><strong>Contact Person:</strong> {{ supplier.contact_person }}</p>
+<p><strong>Phone:</strong> {{ supplier.phone }}</p>
+<p><strong>Email:</strong> {{ supplier.email }}</p>
+<p><strong>Address:</strong> {{ supplier.address }}</p>
+<a href="{% url 'inventory:supplier_list' %}">Back to List</a>
+{% endblock %}

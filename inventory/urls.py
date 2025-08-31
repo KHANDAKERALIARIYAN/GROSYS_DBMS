@@ -18,4 +18,17 @@ urlpatterns = [
     path("products/<int:pk>/purchase/", views.purchase, name="purchase"),
     path("sales/", views.sale_list, name="sale_list"),
     path("products/<int:pk>/sale/", views.sale, name="sale"),
+
+    # Supplier & Category
+    path("suppliers/", views.supplier_list, name="supplier_list"),
+    path("categories/", views.category_list, name="category_list"),
+    path("categories/add/", views.category_add, name="category_add"),
+    path("categories/<int:pk>/", views.category_detail, name="category_detail"),
+    path("categories/<int:pk>/update/", views.category_update, name="category_update"),
+    path("categories/<int:pk>/delete/", views.category_delete, name="category_delete"),
+
+    path("suppliers/add/", views.supplier_create, name="supplier_create"),
+    path("suppliers/<int:pk>/", views.supplier_detail, name="supplier_detail"),
+    path("suppliers/<int:pk>/update/", views.supplier_update, name="supplier_update"),
+    path("suppliers/<int:pk>/delete/", views.supplier_delete, name="supplier_delete"),
 ]

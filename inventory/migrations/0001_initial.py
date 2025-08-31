@@ -65,15 +65,5 @@ class Migration(migrations.Migration):
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='inventory.product')),
             ],
         ),
-        migrations.CreateModel(
-            name='StockTransaction',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('transaction_type', models.CharField(choices=[('IN', 'Stock In'), ('OUT', 'Stock Out')], max_length=3)),
-                ('quantity', models.PositiveIntegerField()),
-                ('date', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='inventory.product')),
-            ],
-        ),
+    # Removed StockTransaction model
     ]

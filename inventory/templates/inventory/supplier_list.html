@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Suppliers</h2>
+<a href="{% url 'inventory:supplier_create' %}" class="btn" style="float:right;margin-bottom:10px;">ADD Supplier</a>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Contact Person</th>
+      <th>Phone</th>
+      <th>Email</th>
+      <th>Address</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for supplier in suppliers %}
+    <tr>
+      <td>{{ supplier.name }}</td>
+      <td>{{ supplier.contact_person }}</td>
+      <td>{{ supplier.phone }}</td>
+      <td>{{ supplier.email }}</td>
+      <td>{{ supplier.address }}</td>
+      <td>
+        <a href="{% url 'inventory:supplier_detail' supplier.id %}">View</a> |
+        <a href="{% url 'inventory:supplier_update' supplier.id %}">Update</a> |
+        <a href="{% url 'inventory:supplier_delete' supplier.id %}">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No suppliers found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
