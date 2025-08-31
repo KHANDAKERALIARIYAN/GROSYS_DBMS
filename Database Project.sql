@@ -569,3 +569,106 @@ SELECT get_supplier_name(1) AS supplier FROM dual;
 
 
 
+
+
+-- cursor  
+
+-- List all products with stock
+DECLARE
+    CURSOR c_products IS
+        SELECT ID, NAME, QUANTITY, PRICE FROM INVENTORY_PRODUCT;
+
+    v_id        INVENTORY_PRODUCT.ID%TYPE;
+    v_name      INVENTORY_PRODUCT.NAME%TYPE;
+    v_quantity  INVENTORY_PRODUCT.QUANTITY%TYPE;
+    v_price     INVENTORY_PRODUCT.PRICE%TYPE;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Product List ---');
+    OPEN c_products;
+    LOOP
+        FETCH c_products INTO v_id, v_name, v_quantity, v_price;
+        EXIT WHEN c_products%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('ID: ' || v_id || ', Name: ' || v_name ||
+                             ', Stock: ' || v_quantity || ', Price: ' || v_price);
+    END LOOP;
+    CLOSE c_products;
+END;
+/
+
+-- Show sales report for each product
+DECLARE
+    CURSOR c_sales IS
+        SELECT P.NAME, NVL(SUM(S.QUANTITY), 0) AS TOTAL_SOLD
+        FROM INVENTORY_PRODUCT P
+        LEFT JOIN INVENTORY_SALE S ON P.ID = S.PRODUCT_ID
+        GROUP BY P.NAME;
+
+    v_name  INVENTORY_PRODUCT.NAME%TYPE;
+    v_total NUMBER;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Sales Report ---');
+    OPEN c_sales;
+    LOOP
+        FETCH c_sales INTO v_name, v_total;
+        EXIT WHEN c_sales%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Product: ' || v_name || ' | Total Sold: ' || v_total);
+    END LOOP;
+    CLOSE c_sales;
+END;
+/
+
+-- Purchases of a given product
+DECLARE
+    CURSOR c_purchases (p_product_id NUMBER) IS
+        SELECT ID, QUANTITY, PRICE, CREATED_AT
+        FROM INVENTORY_PURCHASE
+        WHERE PRODUCT_ID = p_product_id;
+
+    v_id        INVENTORY_PURCHASE.ID%TYPE;
+    v_quantity  INVENTORY_PURCHASE.QUANTITY%TYPE;
+    v_price     INVENTORY_PURCHASE.PRICE%TYPE;
+    v_date      INVENTORY_PURCHASE.CREATED_AT%TYPE;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Purchases for Product ID 1 ---');
+    OPEN c_purchases(1);
+    LOOP
+        FETCH c_purchases INTO v_id, v_quantity, v_price, v_date;
+        EXIT WHEN c_purchases%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Purchase ID: ' || v_id || ', Qty: ' || v_quantity ||
+                             ', Price: ' || v_price || ', Date: ' || v_date);
+    END LOOP;
+    CLOSE c_purchases;
+END;
+/
+
+-- Products with low stock
+DECLARE
+    CURSOR c_low_stock IS
+        SELECT NAME, QUANTITY FROM INVENTORY_PRODUCT WHERE QUANTITY < 5;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Low Stock Products ---');
+    FOR rec IN c_low_stock LOOP
+        DBMS_OUTPUT.PUT_LINE('Low Stock -> ' || rec.NAME || ': ' || rec.QUANTITY || ' units left');
+    END LOOP;
+END;
+/
+
+-- Product and Supplier info
+DECLARE
+    CURSOR c_product_supplier IS
+        SELECT P.NAME AS PRODUCT_NAME, S.NAME AS SUPPLIER_NAME
+        FROM INVENTORY_PRODUCT P
+        JOIN INVENTORY_SUPPLIER S ON P.SUPPLIER_ID = S.ID;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Product and Supplier Info ---');
+    FOR rec IN c_product_supplier LOOP
+        DBMS_OUTPUT.PUT_LINE('Product: ' || rec.PRODUCT_NAME || ' | Supplier: ' || rec.SUPPLIER_NAME);
+    END LOOP;
+END;
+/
+
+
+
+
+-- TRIGGERS
+
