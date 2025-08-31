@@ -91,7 +91,7 @@ VALUES (3, 'Comfort Home Suppliers', 'Nasrin Akter', '01911223344', 'nasrin@comf
 -- complex queries 
 
 
--- 1 Products with Category & Supplier
+-- Products with Category & Supplier
 
 SELECT 
     p.ID AS product_id,
@@ -107,7 +107,9 @@ FROM INVENTORY_PRODUCT p
 LEFT JOIN INVENTORY_CATEGORY c ON p.CATEGORY_ID = c.ID
 LEFT JOIN INVENTORY_SUPPLIER s ON p.SUPPLIER_ID = s.ID;
 
--- 2 Low Stock Products (< 5 units)
+
+
+-- Low Stock Products (< 5 units)
 
 SELECT 
     p.ID,
@@ -120,7 +122,8 @@ WHERE p.QUANTITY < 5
 ORDER BY p.QUANTITY ASC;
 
 
--- 3 Stock Value (per product & overall)
+
+-- Stock Value (per product & overall)
 
 -- Per product
 SELECT 
@@ -135,7 +138,9 @@ SELECT
     SUM(p.QUANTITY * p.PRICE) AS total_stock_value
 FROM INVENTORY_PRODUCT p;
 
--- 4 Top 5 Best-Selling Products
+
+
+--  Top 5 Best-Selling Products
 
 SELECT 
     p.NAME,
@@ -147,7 +152,7 @@ GROUP BY p.NAME
 ORDER BY total_sold DESC
 FETCH FIRST 5 ROWS ONLY;
 
--- 5 Bottom 5 Least-Selling Products
+-- Bottom 5 Least-Selling Products
 
 SELECT 
     p.NAME,
@@ -158,33 +163,9 @@ GROUP BY p.NAME
 ORDER BY total_sold ASC
 FETCH FIRST 5 ROWS ONLY;
 
--- 6 Transaction History of a Product
-
-SELECT 
-    st.ID,
-    st.TRANSACTION_TYPE,
-    st.QUANTITY,
-    st."DATE",
-    st.CREATED_BY_ID,
-    p.NAME AS product_name
-FROM INVENTORY_STOCKTRANSACTION st
-JOIN INVENTORY_PRODUCT p ON st.PRODUCT_ID = p.ID
-WHERE p.ID = 101   -- Example product ID
-ORDER BY st."DATE" ASC;
-
--- 7 Supplier-Wise Total Products Supplied
-
-SELECT 
-    sup.NAME AS supplier_name,
-    COUNT(p.ID) AS product_count,
-    SUM(p.QUANTITY) AS total_quantity
-FROM INVENTORY_SUPPLIER sup
-JOIN INVENTORY_PRODUCT p ON sup.ID = p.SUPPLIER_ID
-GROUP BY sup.NAME
-ORDER BY total_quantity DESC;
 
 
--- 8 Monthly Sales vs Purchases Report
+-- Monthly Sales vs Purchases Report
 
 SELECT 
     TO_CHAR(s.CREATED_AT, 'YYYY-MM') AS month,
@@ -197,7 +178,9 @@ FROM INVENTORY_SALE s
 GROUP BY TO_CHAR(s.CREATED_AT, 'YYYY-MM')
 ORDER BY month;
 
---9 Profit/Loss Per Product
+
+
+-- Profit/Loss Per Product
 
 SELECT 
     p.NAME,
@@ -210,3 +193,59 @@ LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
 GROUP BY p.NAME;
 
 
+
+-- Average Selling Price vs. Purchase Price per Product
+SELECT p.NAME,
+       ROUND(AVG(s.PRICE), 2) AS avg_selling_price,
+       ROUND(AVG(b.PRICE), 2) AS avg_purchase_price
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
+GROUP BY p.NAME;
+
+
+
+-- Daily Sales Summary
+SELECT TRUNC(s.CREATED_AT) AS sale_date,
+       SUM(s.QUANTITY) AS total_quantity,
+       SUM(s.QUANTITY * s.PRICE) AS total_value
+FROM INVENTORY_SALE s
+GROUP BY TRUNC(s.CREATED_AT)
+ORDER BY sale_date DESC;
+
+
+
+-- Products Generating Negative Profit
+SELECT p.NAME,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) AS total_sales,
+       NVL(SUM(b.QUANTITY * b.PRICE), 0) AS total_purchase,
+       (NVL(SUM(s.QUANTITY * s.PRICE), 0) - NVL(SUM(b.QUANTITY * b.PRICE), 0)) AS profit_loss
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
+GROUP BY p.NAME
+HAVING (NVL(SUM(s.QUANTITY * s.PRICE), 0) - NVL(SUM(b.QUANTITY * b.PRICE), 0)) < 0;
+
+
+
+-- Most Recent Purchase & Sale per Product
+SELECT p.NAME,
+       (SELECT MAX(pu.CREATED_AT) FROM INVENTORY_PURCHASE pu WHERE pu.PRODUCT_ID = p.ID) AS last_purchase_date,
+       (SELECT MAX(s.CREATED_AT) FROM INVENTORY_SALE s WHERE s.PRODUCT_ID = p.ID) AS last_sale_date
+FROM INVENTORY_PRODUCT p;
+
+
+
+-- Yearly Profit Report
+SELECT TO_CHAR(s.CREATED_AT, 'YYYY') AS year,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) AS total_sales,
+       NVL((SELECT SUM(pu.QUANTITY * pu.PRICE)
+            FROM INVENTORY_PURCHASE pu
+            WHERE TO_CHAR(pu.CREATED_AT, 'YYYY') = TO_CHAR(s.CREATED_AT, 'YYYY')), 0) AS total_purchases,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) -
+       NVL((SELECT SUM(pu.QUANTITY * pu.PRICE)
+            FROM INVENTORY_PURCHASE pu
+            WHERE TO_CHAR(pu.CREATED_AT, 'YYYY') = TO_CHAR(s.CREATED_AT, 'YYYY')), 0) AS profit_loss
+FROM INVENTORY_SALE s
+GROUP BY TO_CHAR(s.CREATED_AT, 'YYYY')
+ORDER BY year;
