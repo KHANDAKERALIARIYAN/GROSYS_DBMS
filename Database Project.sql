@@ -1,0 +1,251 @@
+CREATE TABLE INVENTORY_CATEGORY (
+    ID          NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    NAME        NVARCHAR2(100),
+    DESCRIPTION NCLOB
+);
+
+CREATE TABLE INVENTORY_SUPPLIER (
+    ID               NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    NAME             NVARCHAR2(150),
+    CONTACT_PERSON   NVARCHAR2(100),
+    PHONE            NVARCHAR2(20),
+    EMAIL            NVARCHAR2(254),
+    ADDRESS          NCLOB
+);
+
+CREATE TABLE INVENTORY_PRODUCT (
+    ID           NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    NAME         NVARCHAR2(100),
+    SKU          NVARCHAR2(50),
+    QUANTITY     NUMBER(11, 0)    NOT NULL,
+    PRICE        NUMBER(10, 2)    NOT NULL,
+    CATEGORY_ID  NUMBER(19, 0),
+    SUPPLIER_ID  NUMBER(19, 0),
+    CONSTRAINT fk_product_category FOREIGN KEY (CATEGORY_ID) REFERENCES INVENTORY_CATEGORY(ID),
+    CONSTRAINT fk_product_supplier FOREIGN KEY (SUPPLIER_ID) REFERENCES INVENTORY_SUPPLIER(ID)
+);
+
+CREATE TABLE INVENTORY_PURCHASE (
+    ID           NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    QUANTITY     NUMBER(11, 0)    NOT NULL,
+    PRICE        NUMBER(10, 2)    NOT NULL,
+    CREATED_AT   TIMESTAMP(6)     NOT NULL,
+    PRODUCT_ID   NUMBER(19, 0)    NOT NULL,
+    CONSTRAINT fk_purchase_product FOREIGN KEY (PRODUCT_ID) REFERENCES INVENTORY_PRODUCT(ID)
+);
+
+CREATE TABLE INVENTORY_SALE (
+    ID           NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    QUANTITY     NUMBER(11, 0)    NOT NULL,
+    PRICE        NUMBER(10, 2)    NOT NULL,
+    CREATED_AT   TIMESTAMP(6)     NOT NULL,
+    PRODUCT_ID   NUMBER(19, 0)    NOT NULL,
+    CONSTRAINT fk_sale_product FOREIGN KEY (PRODUCT_ID) REFERENCES INVENTORY_PRODUCT(ID)
+);
+
+CREATE TABLE INVENTORY_STOCKTRANSACTION (
+    ID                 NUMBER(19, 0)    NOT NULL PRIMARY KEY,
+    TRANSACTION_TYPE   NVARCHAR2(3),
+    QUANTITY           NUMBER(11, 0)    NOT NULL,
+    "DATE"             TIMESTAMP(6)     NOT NULL,
+    CREATED_BY_ID      NUMBER(11, 0),
+    PRODUCT_ID         NUMBER(19, 0)    NOT NULL,
+    CONSTRAINT fk_stock_product FOREIGN KEY (PRODUCT_ID) REFERENCES INVENTORY_PRODUCT(ID)
+);
+
+
+
+
+-- View all data from each table
+SELECT * FROM INVENTORY_CATEGORY;
+SELECT * FROM INVENTORY_PRODUCT;
+SELECT * FROM INVENTORY_PURCHASE;
+SELECT * FROM INVENTORY_SALE;
+SELECT * FROM INVENTORY_STOCKTRANSACTION;
+SELECT * FROM INVENTORY_SUPPLIER;
+
+
+
+INSERT INTO INVENTORY_CATEGORY (ID, NAME, DESCRIPTION)
+VALUES (1, 'Electronics', 'Devices such as phones, laptops, and TVs');
+
+INSERT INTO INVENTORY_CATEGORY (ID, NAME, DESCRIPTION)
+VALUES (2, 'Groceries', 'Daily household food and items');
+
+INSERT INTO INVENTORY_CATEGORY (ID, NAME, DESCRIPTION)
+VALUES (3, 'Furniture', 'Tables, chairs, and sofas');
+
+
+
+
+INSERT INTO INVENTORY_SUPPLIER (ID, NAME, CONTACT_PERSON, PHONE, EMAIL, ADDRESS)
+VALUES (1, 'Tech Distributors Ltd.', 'Rahim Uddin', '01712345678', 'rahim@techdist.com', 'Dhaka, Bangladesh');
+
+INSERT INTO INVENTORY_SUPPLIER (ID, NAME, CONTACT_PERSON, PHONE, EMAIL, ADDRESS)
+VALUES (2, 'Fresh Mart Suppliers', 'Karim Hossain', '01898765432', 'karim@freshmart.com', 'Chittagong, Bangladesh');
+
+INSERT INTO INVENTORY_SUPPLIER (ID, NAME, CONTACT_PERSON, PHONE, EMAIL, ADDRESS)
+VALUES (3, 'Comfort Home Suppliers', 'Nasrin Akter', '01911223344', 'nasrin@comfort.com', 'Sylhet, Bangladesh');
+
+
+-- complex queries 
+
+
+-- Products with Category & Supplier
+
+SELECT 
+    p.ID AS product_id,
+    p.NAME AS product_name,
+    p.SKU,
+    p.QUANTITY,
+    p.PRICE,
+    c.NAME AS category_name,
+    s.NAME AS supplier_name,
+    s.CONTACT_PERSON,
+    s.PHONE
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_CATEGORY c ON p.CATEGORY_ID = c.ID
+LEFT JOIN INVENTORY_SUPPLIER s ON p.SUPPLIER_ID = s.ID;
+
+
+
+-- Low Stock Products (< 5 units)
+
+SELECT 
+    p.ID,
+    p.NAME,
+    p.QUANTITY,
+    c.NAME AS category
+FROM INVENTORY_PRODUCT p
+JOIN INVENTORY_CATEGORY c ON p.CATEGORY_ID = c.ID
+WHERE p.QUANTITY < 5
+ORDER BY p.QUANTITY ASC;
+
+
+
+-- Stock Value (per product & overall)
+
+-- Per product
+SELECT 
+    p.NAME,
+    p.QUANTITY,
+    p.PRICE,
+    (p.QUANTITY * p.PRICE) AS stock_value
+FROM INVENTORY_PRODUCT p;
+
+-- Overall
+SELECT 
+    SUM(p.QUANTITY * p.PRICE) AS total_stock_value
+FROM INVENTORY_PRODUCT p;
+
+
+
+--  Top 5 Best-Selling Products
+
+SELECT 
+    p.NAME,
+    SUM(s.QUANTITY) AS total_sold,
+    SUM(s.QUANTITY * s.PRICE) AS total_sales_value
+FROM INVENTORY_SALE s
+JOIN INVENTORY_PRODUCT p ON s.PRODUCT_ID = p.ID
+GROUP BY p.NAME
+ORDER BY total_sold DESC
+FETCH FIRST 5 ROWS ONLY;
+
+-- Bottom 5 Least-Selling Products
+
+SELECT 
+    p.NAME,
+    NVL(SUM(s.QUANTITY), 0) AS total_sold
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+GROUP BY p.NAME
+ORDER BY total_sold ASC
+FETCH FIRST 5 ROWS ONLY;
+
+
+
+-- Monthly Sales vs Purchases Report
+
+SELECT 
+    TO_CHAR(s.CREATED_AT, 'YYYY-MM') AS month,
+    SUM(s.QUANTITY * s.PRICE) AS total_sales,
+    (SELECT NVL(SUM(pu.QUANTITY * pu.PRICE), 0)
+     FROM INVENTORY_PURCHASE pu
+     WHERE TO_CHAR(pu.CREATED_AT, 'YYYY-MM') = TO_CHAR(s.CREATED_AT, 'YYYY-MM')
+    ) AS total_purchases
+FROM INVENTORY_SALE s
+GROUP BY TO_CHAR(s.CREATED_AT, 'YYYY-MM')
+ORDER BY month;
+
+
+
+-- Profit/Loss Per Product
+
+SELECT 
+    p.NAME,
+    NVL(SUM(s.QUANTITY * s.PRICE), 0) AS total_sales,
+    NVL(SUM(b.QUANTITY * b.PRICE), 0) AS total_purchase,
+    (NVL(SUM(s.QUANTITY * s.PRICE), 0) - NVL(SUM(b.QUANTITY * b.PRICE), 0)) AS profit_loss
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
+GROUP BY p.NAME;
+
+
+
+-- Average Selling Price vs. Purchase Price per Product
+SELECT p.NAME,
+       ROUND(AVG(s.PRICE), 2) AS avg_selling_price,
+       ROUND(AVG(b.PRICE), 2) AS avg_purchase_price
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
+GROUP BY p.NAME;
+
+
+
+-- Daily Sales Summary
+SELECT TRUNC(s.CREATED_AT) AS sale_date,
+       SUM(s.QUANTITY) AS total_quantity,
+       SUM(s.QUANTITY * s.PRICE) AS total_value
+FROM INVENTORY_SALE s
+GROUP BY TRUNC(s.CREATED_AT)
+ORDER BY sale_date DESC;
+
+
+
+-- Products Generating Negative Profit
+SELECT p.NAME,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) AS total_sales,
+       NVL(SUM(b.QUANTITY * b.PRICE), 0) AS total_purchase,
+       (NVL(SUM(s.QUANTITY * s.PRICE), 0) - NVL(SUM(b.QUANTITY * b.PRICE), 0)) AS profit_loss
+FROM INVENTORY_PRODUCT p
+LEFT JOIN INVENTORY_SALE s ON p.ID = s.PRODUCT_ID
+LEFT JOIN INVENTORY_PURCHASE b ON p.ID = b.PRODUCT_ID
+GROUP BY p.NAME
+HAVING (NVL(SUM(s.QUANTITY * s.PRICE), 0) - NVL(SUM(b.QUANTITY * b.PRICE), 0)) < 0;
+
+
+
+-- Most Recent Purchase & Sale per Product
+SELECT p.NAME,
+       (SELECT MAX(pu.CREATED_AT) FROM INVENTORY_PURCHASE pu WHERE pu.PRODUCT_ID = p.ID) AS last_purchase_date,
+       (SELECT MAX(s.CREATED_AT) FROM INVENTORY_SALE s WHERE s.PRODUCT_ID = p.ID) AS last_sale_date
+FROM INVENTORY_PRODUCT p;
+
+
+
+-- Yearly Profit Report
+SELECT TO_CHAR(s.CREATED_AT, 'YYYY') AS year,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) AS total_sales,
+       NVL((SELECT SUM(pu.QUANTITY * pu.PRICE)
+            FROM INVENTORY_PURCHASE pu
+            WHERE TO_CHAR(pu.CREATED_AT, 'YYYY') = TO_CHAR(s.CREATED_AT, 'YYYY')), 0) AS total_purchases,
+       NVL(SUM(s.QUANTITY * s.PRICE), 0) -
+       NVL((SELECT SUM(pu.QUANTITY * pu.PRICE)
+            FROM INVENTORY_PURCHASE pu
+            WHERE TO_CHAR(pu.CREATED_AT, 'YYYY') = TO_CHAR(s.CREATED_AT, 'YYYY')), 0) AS profit_loss
+FROM INVENTORY_SALE s
+GROUP BY TO_CHAR(s.CREATED_AT, 'YYYY')
+ORDER BY year;
