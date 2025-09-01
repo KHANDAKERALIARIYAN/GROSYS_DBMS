@@ -55,11 +55,12 @@ WSGI_APPLICATION = "invproj.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'localhost:1521/ORACLE',  # SID = ORACLE
-        'USER': 'ariyan',
-        'PASSWORD': 'ariyan123',
+        'NAME': 'localhost:1521/orclpdb',  # service name, not ORACLE
+        'USER': 'fahim',
+        'PASSWORD': '12345678',
     }
 }
+
 
 
 AUTH_PASSWORD_VALIDATORS = []
