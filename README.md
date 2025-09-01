@@ -55,4 +55,5 @@ GROSYS is a Django-based inventory management system designed for grocery stores
 This project is licensed under the MIT License.
 
 ## Author
-KHANDAKER ALI ARIYAN
+KHANDAKER ALI ARIYAN , Nayef Wasit Siddiqui , Samiul Alim Auntor
+
